@@ -20,7 +20,7 @@ None
 .OUTPUTS
 Just output on screen
 .NOTES
-Version:        1.0
+Version:        1.2.0
 Author:         info@singleton-factory.de
 Creation Date:  2023-03-03
 Purpose/Change: Initial version
@@ -41,6 +41,9 @@ param(
     [switch]$Help = $false,
     [switch]$DisableUpdateCheck = $false
 )
+
+# Version of this script
+$version = "1.2.0"
 
 # Configuration
 # Contains the URL with download links - will be scraped automatically for the latest version
@@ -560,6 +563,7 @@ function Log {
 function Header {
     Log -Severity "Info" "Cloudya All-in-One Desktop Manager by Aaron Viehl (Singleton Factory GmbH)"
     Log -Severity "Info" "Your toolkit for a better NFON Cloudya experience."
+    Log -Severity "Info" "Version: $Version"
     Log -Severity "Info" "======================="
 }
 #-----------------------------------------------------------[Main Code]------------------------------------------------------------#
