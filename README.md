@@ -39,7 +39,7 @@ Der Autor übernimmt keine Verantwortung für Schäden oder Verluste, die durch 
 
 Durch Angabe des Parameters `-DisableUpdateCheck` wird die interne Cloudya-Funktion für das Prüfen auf neue Updates deaktiviert. Somit werden Benutzer nicht mehr zum Updaten der Cloudya-Installation aufgefordert. Dies ist insbesondere im Unternehmensumfeld sinnvoll, da das Update lokale Administratorberechtigungen benötigt.
 
-Die Deaktivierung des Update-Checks geschieht über einen Umweg, da es keine direkte Konfigurationsmöglichkeit gibt:
+Die Deaktivierung des Update-Checks geschieht über einen Umweg, da es [keine direkte Konfigurationsmöglichkeit](https://partnercommunity.nfon.com/t/release-teaser-cloudya-app-1-6/2618/33) gibt:
 
 1. Die Datei `control-cloudya-update.ps1` wird im Programmordner der Cloudya-Installation erstellt.
 2. Es wird eine Autostart Verknüpfung für alle Benutzer erstellt, welche das Script `control-cloudya-update.ps1` bei jedem Login ausführt.
@@ -47,7 +47,7 @@ Die Deaktivierung des Update-Checks geschieht über einen Umweg, da es keine dir
    1. Wenn die Datei erzeugt wird, ist der Inhalt `{"handle-updates": "IGNORE" }` und deaktiviert das Update.
    2. Wenn die Datei gelöscht wird, funktioniert der Updater wieder wie gewohnt.
 
-*Hinweis: Wenn besondere Sicherheitsvorkehrungen bezüglich der Nutzung von PowerShell-Scripten aktiv sind, schlägt diese Option möglicherweise fehl. In diesem Fall muss eine andere Möglichkeit gefunden werden.*
+*Hinweis: Wenn besondere Sicherheitsvorkehrungen bezüglich der Nutzung von PowerShell-Scripten aktiv sind, schlägt diese Option möglicherweise fehl. In diesem Fall muss eine andere Möglichkeit gefunden werden.* 
 
 ## Beispiel
 
