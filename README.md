@@ -1,4 +1,5 @@
 # Deploy-NFONCloudya.ps1
+* Version: 1.2.0 *
 
 Dieses Skript versucht, die neueste Version von Cloudya Desktop by NFON von der offiziellen Website zu installieren. Es bietet darüber hinaus einige erweiterte Konfigurationseinstellungen für die Verteilung innerhalb von Firmennetzwerken, da der native Installer von NFON dies nicht bietet.
 
