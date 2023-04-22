@@ -9,6 +9,8 @@ This script tries to install the newest version of Cloudya Desktop by NFON from 
 The action to perform. Possible values are "Install", "Uninstall", "Update" or "Detect".
 .PARAMETER Autostart
 Creates a shortcut in the autostart folder.
+.PARAMETER DisableUpdateCheck
+Disables the update check.
 .PARAMETER EnableCRM
 Enables the CRM integration.
 .PARAMETER Help
@@ -24,7 +26,7 @@ Creation Date:  2023-03-03
 Purpose/Change: Initial version
   
 .EXAMPLE
-.\manage-nfon-cloudya.ps1 -Action Install -Autostart -EnableCRM
+.\manage-nfon-cloudya.ps1 -Action Install -Autostart -EnableCRM -DisableUpdateCheck
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
@@ -36,7 +38,8 @@ param(
     [string]$Action,
     [switch]$Autostart = $false,
     [switch]$EnableCRM = $false,
-    [switch]$Help = $false
+    [switch]$Help = $false,
+    [switch]$DisableUpdateCheck = $false
 )
 
 # Configuration
@@ -234,11 +237,23 @@ function Uninstall($App) {
     $CRMQuietUninstallString = $App.CRMQuietUninstallString
     $CRMAddinsGUID = $App.CRMAddinsGUID
     $CRMPlusAddinsGUID = $App.CRMPlusAddinsGUID
+    $installLocation = $App.InstallLocation
 
     # Check if any apps were found
     if (-not $displayName -and -not $displayVersion -and -not $GUID -and -not $CRMQuietUninstallString -and -not $CRMAddinsGUID -and -not $CRMPlusAddinsGUID) {
         Log -Severity "Info" "No apps found to uninstall."
         return
+    }
+
+    # Remove cloudya update control script
+    if (Test-Path -Path "$installLocation\control-cloudya-update.ps1") {
+        Remove-Item -Path "$installLocation\control-cloudya-update.ps1" -Force -ErrorAction SilentlyContinue
+        Log -Severity "Info" "Update control disabled."
+    }
+
+    # Remove cloudya update control script autostart
+    if (Test-Path -Path "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cloudya Update Control.lnk") {
+        Remove-Item -Path "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cloudya Update Control.lnk" -Force -ErrorAction SilentlyContinue
     }
 
     # Uninstall the setup msi file
@@ -381,7 +396,6 @@ function Update {
     }
 }
 
-
 function Autostart([bool]$trueOrFalse) {
     if ($trueOrFalse -eq $false) {
         # Find shortcut in startup folder
@@ -449,6 +463,60 @@ function Autostart([bool]$trueOrFalse) {
     }
 }
 
+function DisableUpdateCheck([bool]$trueOrFalse) {
+    $CloudyaInstallLocation = (CheckIfInstalled).InstallLocation
+    if ($null -eq $CloudyaInstallLocation) {
+        Log -Severity "Error" "Cloudya Desktop is not installed."
+        Log -Severity "Error" "Please install Cloudya Desktop first."
+        Log -Severity "Error" "You can do this by running this script with the '-Action Install' parameter."
+        return $false
+    } 
+    # Update-Check-control script
+    $UpdateControlScript = @"
+# This script was created by the Cloudya All-in-One Desktop Manager by Aaron Viehl (Singleton Factory GmbH).
+# It prevents Cloudya Desktop from updating itself.
+# It is referenced in the users auto start folder.
+
+# Change this value to `$true to enable updates.
+`$UpdatesEnabled = `$$trueOrFalse
+
+`$filePath = `"`${env:APPDATA}`\cloudya-desktop\Cloudya-local-settings.json`"
+
+if (`$UpdatesEnabled -eq `$true) {
+    if (Test-Path `$filePath) {
+        Remove-Item `$filePath
+    }
+} else {
+    `$content = '{ `"handle-updates`": `"IGNORE`" }'
+    New-Item -ItemType File -Path `$filePath -Force | Out-Null
+    Set-Content -Path `$filePath -Value `$content    
+}    
+"@
+
+    $UpdateControlScriptPath = "$CloudyaInstallLocation\control-cloudya-update.ps1"
+    try {
+        New-Item -ItemType File -Path $UpdateControlScriptPath -Force | Out-Null
+        Set-Content -Path $UpdateControlScriptPath -Value $UpdateControlScript
+        if ($trueOrFalse) {
+            Log -Severity "Info" "Updates are now enabled."
+        }
+        else {
+            Log -Severity "Info" "Updates are now disabled."
+        }
+    }
+    catch {
+        Log -Severity "Error" "Failed to create update control script: $($_.Exception.Message)"
+        throw
+    }
+
+    # Create auto start shortcut for update control script
+    $WshShell = New-Object -ComObject "WScript.Shell"
+    $Shortcut = $WshShell.CreateShortcut("$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Cloudya Update Control.lnk")
+    $Shortcut.TargetPath = "powershell.exe"
+    $Shortcut.Arguments = "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$CloudyaInstallLocation\control-cloudya-update.ps1`""
+    $Shortcut.WindowStyle = 0
+    $Shortcut.Save()
+}
 
 function Log {
     param(
@@ -542,6 +610,14 @@ if ($PSBoundParameters.ContainsKey('Autostart') -and $Autostart) {
 }
 elseif ($PSBoundParameters.ContainsKey('Autostart') -and !$Autostart) {
     Autostart $false
+}
+
+# Check if update check parameter is set
+if ($PSBoundParameters.ContainsKey('DisableUpdateCheck') -and $DisableUpdateCheck) {
+    DisableUpdateCheck $false
+}
+elseif ($PSBoundParameters.ContainsKey('DisableUpdateCheck') -and !$DisableUpdateCheck) {
+    DisableUpdateCheck $true
 }
 
 # Cleanup all temporary files
