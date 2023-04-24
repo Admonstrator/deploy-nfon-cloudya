@@ -52,7 +52,7 @@ $url = "https://www.nfon.com/de/service/downloads"
 function GetDownloadURL {
     Log -Severity "Info" "Getting download URL ..."
     # Send a request to the website and get the response
-    $response = Invoke-WebRequest $url
+    $response = Invoke-WebRequest $url -UseBasicParsing
 
     # Define the regex patterns to extract the download URLs and version numbers
     $regexDefault = 'https:\/\/cdn\.cloudya\.com\/cloudya-(\d\.\d\.\d)-win-msi\.zip'
