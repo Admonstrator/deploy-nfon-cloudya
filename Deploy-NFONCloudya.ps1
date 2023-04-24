@@ -208,7 +208,7 @@ function Install($EnableCRM) {
         if ($setupFile) {
             # Install the setup file
             Log -Severity "Info" "Starting installation process ..."
-            Start-Process -FilePath msiexec.exe -ArgumentList "/i $setupFile /qn REBOOT=ReallySuppress" -Wait
+            Start-Process -FilePath msiexec.exe -ArgumentList "/i $setupFile /qn /norestart REBOOT=ReallySuppress" -Wait
             # Wait until crm.exe is not running
             Log -Severity "Info" "Waiting for crm.exe to finish ..."
             while ($null -ne (Get-Process -Name crm -ErrorAction SilentlyContinue)) {
@@ -266,7 +266,7 @@ function Uninstall($App) {
         Log -Severity "Info" "Uninstalling $displayName $displayVersion ..."
         # Stop Process cloudya.exe 
         Stop-Process -Name "cloudya" -Force -ErrorAction SilentlyContinue
-        Start-Process -FilePath msiexec.exe -ArgumentList "/x $GUID /qn REBOOT=ReallySuppress" -Wait
+        Start-Process -FilePath msiexec.exe -ArgumentList "/x $GUID /qn /norestart REBOOT=ReallySuppress" -Wait
     }
 
     # Uninstall CRM Connect
@@ -280,7 +280,7 @@ function Uninstall($App) {
     # Uninstall CRM Connect Addins
     if ($CRMAddinsGUID) {
         Log -Severity "Info" "Uninstalling CRM Connect Addins ..."
-        Start-Process -FilePath msiexec.exe -ArgumentList "/x $CRMAddinsGUID /qn REBOOT=ReallySuppress" -Wait
+        Start-Process -FilePath msiexec.exe -ArgumentList "/x $CRMAddinsGUID /qn /norestart REBOOT=ReallySuppress" -Wait
     }
 
     # Uninstall CRM Connect Plus Addins
