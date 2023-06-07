@@ -286,7 +286,7 @@ function Uninstall($App) {
     # Uninstall CRM Connect Plus Addins
     if ($CRMPlusAddinsGUID) {
         Log -Severity "Info" "Uninstalling CRM Connect Plus Addins ..."
-        Start-Process -FilePath msiexec.exe -ArgumentList "/x $CRMPlusAddinsGUID /qn REBOOT=ReallySuppress" -Wait
+        Start-Process -FilePath msiexec.exe -ArgumentList "/x $CRMPlusAddinsGUID /qn /norestart REBOOT=ReallySuppress" -Wait
     }
 
     # Waiting until crm.exe is not running
