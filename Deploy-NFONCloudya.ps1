@@ -20,10 +20,10 @@ None
 .OUTPUTS
 Just output on screen
 .NOTES
-Version:        1.2.0
+Version:        1.3.0
 Author:         info@singleton-factory.de
 Creation Date:  2023-03-03
-Purpose/Change: Initial version
+Purpose/Change: Overwrite Version if needed
   
 .EXAMPLE
 .\manage-nfon-cloudya.ps1 -Action Install -Autostart -EnableCRM -DisableUpdateCheck
@@ -39,52 +39,66 @@ param(
     [switch]$Autostart = $false,
     [switch]$EnableCRM = $false,
     [switch]$Help = $false,
-    [switch]$DisableUpdateCheck = $false
+    [switch]$DisableUpdateCheck = $false,
+    [string]$Version = $null
 )
 
 # Version of this script
-$version = "1.2.0"
+$ScriptVersion = "1.3.0"
 
 # Configuration
 # Contains the URL with download links - will be scraped automatically for the latest version
 $url = "https://www.nfon.com/de/service/downloads"
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 function GetDownloadURL {
-    Log -Severity "Info" "Getting download URL ..."
-    # Send a request to the website and get the response
-    $response = Invoke-WebRequest $url -UseBasicParsing
+    if ($null -ne $Version) {
+        Log -Severity "Info" "You specified version $Version"
+        Log -Severity "Info" "This will be used instead of the latest version."
+        return [PSCustomObject]@{
+            URLDefault     = "https://cdn.cloudya.com/cloudya-$Version-win-msi.zip"
+            URLCRM         = "https://cdn.cloudya.com/cloudya-$Version-crm-win-msi.zip"
+            versionDefault = $Version
+            versionCRM     = $Version
+        }
+        else {
+            Log -Severity "Info" "Getting download URL ..."
+            # Send a request to the website and get the response
+            $response = Invoke-WebRequest $url -UseBasicParsing
 
-    # Define the regex patterns to extract the download URLs and version numbers
-    $regexDefault = 'https:\/\/cdn\.cloudya\.com\/cloudya-(\d\.\d\.\d)-win-msi\.zip'
-    $regexCRM = 'https:\/\/cdn\.cloudya\.com\/cloudya-(\d\.\d\.\d)-crm-win-msi\.zip'
+            # Define the regex patterns to extract the download URLs and version numbers
+            $regexDefault = 'https:\/\/cdn\.cloudya\.com\/cloudya-(\d\.\d\.\d)-win-msi\.zip'
+            $regexCRM = 'https:\/\/cdn\.cloudya\.com\/cloudya-(\d\.\d\.\d)-crm-win-msi\.zip'
 
-    # Search for the pattern in the response (without CRM)
-    if ([regex]::IsMatch($response.Content, $regexDefault)) {
-        $matchDefault = [regex]::Match($response.Content, $regexDefault)
-        $urlDefault = $matchDefault.Value
-        $versionDefault = $matchDefault.Groups[1].Value
-    }
-    else {
-        throw "Failed to extract Cloudya Desktop App download URL or version number."
-    }
+            # Search for the pattern in the response (without CRM)
+            if ([regex]::IsMatch($response.Content, $regexDefault)) {
+                $matchDefault = [regex]::Match($response.Content, $regexDefault)
+                $urlDefault = $matchDefault.Value
+                $versionDefault = $matchDefault.Groups[1].Value
+            }
+            else {
+                throw "Failed to extract Cloudya Desktop App download URL or version number."
+            }
 
-    # Search for the pattern in the response (with CRM)
-    if ([regex]::IsMatch($response.Content, $regexCRM)) {
-        $matchCRM = [regex]::Match($response.Content, $regexCRM)
-        $urlCRM = $matchCRM.Value
-        $versionCRM = $matchCRM.Groups[1].Value
-    }
-    else {
-        throw "Failed to extract Cloudya Desktop App CRM download URL or version number."
-    }
+            # Search for the pattern in the response (with CRM)
+            if ([regex]::IsMatch($response.Content, $regexCRM)) {
+                $matchCRM = [regex]::Match($response.Content, $regexCRM)
+                $urlCRM = $matchCRM.Value
+                $versionCRM = $matchCRM.Groups[1].Value
+            }
+            else {
+                throw "Failed to extract Cloudya Desktop App CRM download URL or version number."
+            }
    
-    # Create a PSCustomObject with the extracted information
-    return [PSCustomObject]@{
-        URLDefault     = $urlDefault
-        URLCRM         = $urlCRM
-        versionDefault = $versionDefault
-        versionCRM     = $versionCRM
+            # Create a PSCustomObject with the extracted information
+            return [PSCustomObject]@{
+                URLDefault     = $urlDefault
+                URLCRM         = $urlCRM
+                versionDefault = $versionDefault
+                versionCRM     = $versionCRM
+            }
+        }
     }
+    
 }
 
 # Get a temporary file name
@@ -124,6 +138,10 @@ function Cleanup {
 }
 
 function CheckZipFile ($path) {
+    # Check if there is a file to check
+    if (-not (Test-Path $path)) {
+        return $false
+    }
     # Check if the file is a zip file
     # Read the first four bytes of the file
     $bytes = [System.IO.File]::ReadAllBytes($path)[0..3]
@@ -196,7 +214,7 @@ function Install($EnableCRM) {
             Log -Severity "Info" "Extracted to: $tempExtractFolder."
         }
         else {
-            Log -Severity "Error" "Downloaded file is not a zip file. Program will exit."
+            Log -Severity "Error" "Downloaded file is not a zip file. Maybe the URL returns 404? Program will exit."
             Log -Severity "Error" "Please check if the detected URL is correct."
             cleanup
             exit 1
@@ -274,7 +292,7 @@ function Uninstall($App) {
         Log -Severity "Info" "Uninstalling CRM Connect ..."
         # Stop Process crm.exe
         Stop-Process -Name "crm" -Force -ErrorAction SilentlyContinue
-        Start-Process -FilePath cmd.exe -ArgumentList "/c $CRMQuietUninstallString" -Wait
+        Start-Process -FilePath cmd.exe -ArgumentList "/c $CRMQuietUninstallString /norestart REBOOT=ReallySuppress" -Wait
     }
 
     # Uninstall CRM Connect Addins
@@ -332,10 +350,15 @@ function ShowHelp {
     Log -Severity "Info" "Parameters:"
     Log -Severity "Info" "This script will download and install Cloudya Desktop."
     Log -Severity "Info" "It will also add Cloudya Desktop to the autostart."
-    Log -Severity "Info" "If you want to uninstall Cloudya Desktop, run this script with the -Uninstall parameter."
-    Log -Severity "Info" "If you want to install Cloudya Desktop, run this script with the -Install parameter."
-    Log -Severity "Info" "If you want to enable CRM Connect, run this script with the -EnableCRM parameter."
-    Log -Severity "Info" "If you want to add Cloudya Desktop to the autostart, run this script with the -Autostart parameter."
+    Log -Severity "Info" "To uninstall Cloudya Desktop, run this script with the -Uninstall parameter."
+    Log -Severity "Info" "To install Cloudya Desktop, run this script with the -Install parameter."
+    Log -Severity "Info" "To check for updates, run this script with the -Update parameter."
+    Log -Severity "Info" "To enable CRM Connect, run this script with the -EnableCRM parameter."
+    Log -Severity "Info" "To add Cloudya Desktop to the autostart, run this script with the -Autostart parameter."
+    Log -Severity "Info" "To disable the update check, run this script with the -DisableUpdateCheck parameter."
+    Log -Severity "Info" "You can specify the version with the -Version parameter. This will be used instead of the latest version."
+    Log -Severity "Info" "You can combine the parameters."
+    Log -Severity "Info" "Example: .\manage-nfon-cloudya.ps1 -Action Install -Autostart -EnableCRM -DisableUpdateCheck"
 }
 function Update {
     # Check if the program is already installed
@@ -563,7 +586,7 @@ function Log {
 function Header {
     Log -Severity "Info" "Cloudya All-in-One Desktop Manager by Aaron Viehl (Singleton Factory GmbH)"
     Log -Severity "Info" "Your toolkit for a better NFON Cloudya experience."
-    Log -Severity "Info" "Version: $Version"
+    Log -Severity "Info" "Version: $ScriptVersion"
     Log -Severity "Info" "======================="
 }
 #-----------------------------------------------------------[Main Code]------------------------------------------------------------#
