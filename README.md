@@ -1,5 +1,5 @@
 # Deploy-NFONCloudya.ps1
-*Version: 1.2.0*
+*Version: 1.3.0*
 
 Dieses Skript versucht, die neueste Version von Cloudya Desktop by NFON von der offiziellen Website zu installieren. Es bietet darüber hinaus einige erweiterte Konfigurationseinstellungen für die Verteilung innerhalb von Firmennetzwerken, da der native Installer von NFON dies nicht bietet.
 
@@ -17,7 +17,7 @@ Der Autor übernimmt keine Verantwortung für Schäden oder Verluste, die durch 
 ## Verwendung
 
 ```powershell
-.\Deploy-NFONCloudya.ps1 -Action {Install, Detect, Update, Uninstall} [-EnableCRM] [-Autostart] [-DisableUpdateCheck]
+.\Deploy-NFONCloudya.ps1 -Action {Install, Detect, Update, Uninstall} [-EnableCRM] [-Autostart] [-DisableUpdateCheck] [-Version #.#.#]
 ```
 
 ## Parameter
@@ -27,7 +27,8 @@ Der Autor übernimmt keine Verantwortung für Schäden oder Verluste, die durch 
 | `Action {Install, Detect, Update, Uninstall}` | Sagt dem Script, welche Aktion ausgeführt werden soll:<br />Install → Installieren<br />Detect → Aktuelle Version anzeigen<br />Update → Neuste Version installieren, sofern vorhanden<br />Uninstall → Software entfernen |
 | `EnableCRM`                                   | Installiert Connect CRM automatisch mit                      |
 | `Autostart`                                   | Aktiviert Cloudya im Windows-Autostart für alle Benutzer. Kann auch für die Deaktivierung genutzt werden mittels `-Autostart:$false` |
-| `DisableUpdateCheck`                                 | Deaktiviert den automatischen Update-Check von Cloudya. Standardmäßig wird der Check aktiviert, jedoch benötigt das Update Admin-Rechte. In Firmennetzwerken sollte der Update-Check daher deaktiviert werden. |
+| `DisableUpdateCheck`                          | Deaktiviert den automatischen Update-Check von Cloudya. Standardmäßig wird der Check aktiviert, jedoch benötigt das Update Admin-Rechte. In Firmennetzwerken sollte der Update-Check daher deaktiviert werden. |
+| `Version #.#.#`                               | Gibt eine zu installierende Version ein. Die neuste Version wird dann nicht automatisch ermittelt. Dies löst das Problem, dass NFON nicht überall die gleichen Versionen bereitstellt. |
 ## Funktionsweise
 
 1. Das Script durchsucht die Webseite `https://www.nfon.com/de/service/downloads` nach den jeweiligen Downloadlinks für die neusten MSI-Installer.
@@ -86,3 +87,11 @@ Um den Autostart nachträglich zu deaktivieren:
 ```powershell
 .\Deploy-NFONCloudya.ps1 -Autostart:$false
 ```
+
+Um eine spezifische Version zu installieren:
+
+```powershell
+.\Deploy-NFONCloudya.ps1 -Action Install -Version 1.7.0
+```
+
+Alle Parameter lassen sich miteinander kombinieren.
