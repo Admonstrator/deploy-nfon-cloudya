@@ -20,10 +20,10 @@ None
 .OUTPUTS
 Just output on screen
 .NOTES
-Version:        1.3.0
+Version:        1.3.1
 Author:         info@singleton-factory.de
 Creation Date:  2023-03-03
-Purpose/Change: Overwrite Version if needed
+Purpose/Change: Bugfix Update
   
 .EXAMPLE
 .\manage-nfon-cloudya.ps1 -Action Install -Autostart -EnableCRM -DisableUpdateCheck
@@ -313,6 +313,7 @@ function Uninstall($App) {
     while ($null -ne (Get-Process -Name crm -ErrorAction SilentlyContinue)) {
         Start-Sleep 2
     }
+    return $true
 }
 
 function Detect {
@@ -388,9 +389,11 @@ function Update {
         # Detect if CRM Connect is installed
         if ($installed.CRMdisplayVersion) {
             Log -Severity "Info" "CRM Connect is installed."
+            $EnableCRM = $true
         }
         else {
             Log -Severity "Info" "CRM Connect is not installed."
+            $EnableCRM = $false
         }
     
         # Uninstall the setup msi file
@@ -399,18 +402,7 @@ function Update {
             Log -Severity "Info" "Uninstallation was successful."
         
             # Install the setup file
-            if (Install($env:EnableCRM)) {
-                Log -Severity "Info" "Update was successful."
-                return $true
-            }
-            else {
-                Log -Severity "Error" "Update failed."
-                return $false
-            }
-        }
-        else {
-            Log -Severity "Error" "Uninstallation failed."
-            return $false
+            Install($EnableCRM)
         }
     }
     elseif ([Version]$installed.DisplayVersion -eq [Version]$currentVersion.versionDefault) {
