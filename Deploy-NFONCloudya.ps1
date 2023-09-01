@@ -40,7 +40,7 @@ param(
     [switch]$EnableCRM = $false,
     [switch]$Help = $false,
     [switch]$DisableUpdateCheck = $false,
-    [string]$Version = $null
+    [string]$Version
 )
 
 # Version of this script
@@ -51,7 +51,8 @@ $ScriptVersion = "1.3.0"
 $url = "https://www.nfon.com/de/service/downloads"
 #-----------------------------------------------------------[Functions]------------------------------------------------------------
 function GetDownloadURL {
-    if ($null -ne $Version) {
+    # Check if Version is #.#.# format
+    if ($Version -match "\d\.\d\.\d") {
         Log -Severity "Info" "You specified version $Version"
         Log -Severity "Info" "This will be used instead of the latest version."
         return [PSCustomObject]@{
@@ -60,46 +61,46 @@ function GetDownloadURL {
             versionDefault = $Version
             versionCRM     = $Version
         }
+    }
+    else {
+        Log -Severity "Info" "Getting download URL ..."
+        # Send a request to the website and get the response
+        $response = Invoke-WebRequest $url -UseBasicParsing
+
+        # Define the regex patterns to extract the download URLs and version numbers
+        $regexDefault = 'https:\/\/cdn\.cloudya\.com\/cloudya-(\d\.\d\.\d)-win-msi\.zip'
+        $regexCRM = 'https:\/\/cdn\.cloudya\.com\/cloudya-(\d\.\d\.\d)-crm-win-msi\.zip'
+
+        # Search for the pattern in the response (without CRM)
+        if ([regex]::IsMatch($response.Content, $regexDefault)) {
+            $matchDefault = [regex]::Match($response.Content, $regexDefault)
+            $urlDefault = $matchDefault.Value
+            $versionDefault = $matchDefault.Groups[1].Value
+        }
         else {
-            Log -Severity "Info" "Getting download URL ..."
-            # Send a request to the website and get the response
-            $response = Invoke-WebRequest $url -UseBasicParsing
+            throw "Failed to extract Cloudya Desktop App download URL or version number."
+        }
 
-            # Define the regex patterns to extract the download URLs and version numbers
-            $regexDefault = 'https:\/\/cdn\.cloudya\.com\/cloudya-(\d\.\d\.\d)-win-msi\.zip'
-            $regexCRM = 'https:\/\/cdn\.cloudya\.com\/cloudya-(\d\.\d\.\d)-crm-win-msi\.zip'
-
-            # Search for the pattern in the response (without CRM)
-            if ([regex]::IsMatch($response.Content, $regexDefault)) {
-                $matchDefault = [regex]::Match($response.Content, $regexDefault)
-                $urlDefault = $matchDefault.Value
-                $versionDefault = $matchDefault.Groups[1].Value
-            }
-            else {
-                throw "Failed to extract Cloudya Desktop App download URL or version number."
-            }
-
-            # Search for the pattern in the response (with CRM)
-            if ([regex]::IsMatch($response.Content, $regexCRM)) {
-                $matchCRM = [regex]::Match($response.Content, $regexCRM)
-                $urlCRM = $matchCRM.Value
-                $versionCRM = $matchCRM.Groups[1].Value
-            }
-            else {
-                throw "Failed to extract Cloudya Desktop App CRM download URL or version number."
-            }
+        # Search for the pattern in the response (with CRM)
+        if ([regex]::IsMatch($response.Content, $regexCRM)) {
+            $matchCRM = [regex]::Match($response.Content, $regexCRM)
+            $urlCRM = $matchCRM.Value
+            $versionCRM = $matchCRM.Groups[1].Value
+        }
+        else {
+            throw "Failed to extract Cloudya Desktop App CRM download URL or version number."
+        }
    
-            # Create a PSCustomObject with the extracted information
-            return [PSCustomObject]@{
-                URLDefault     = $urlDefault
-                URLCRM         = $urlCRM
-                versionDefault = $versionDefault
-                versionCRM     = $versionCRM
-            }
+        # Create a PSCustomObject with the extracted information
+        return [PSCustomObject]@{
+            URLDefault     = $urlDefault
+            URLCRM         = $urlCRM
+            versionDefault = $versionDefault
+            versionCRM     = $versionCRM
         }
     }
-    
 }
+
 
 # Get a temporary file name
 function GetTempFileName {
