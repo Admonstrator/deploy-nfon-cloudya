@@ -44,7 +44,7 @@ param(
 )
 
 # Version of this script
-$ScriptVersion = "1.3.0"
+$ScriptVersion = "1.3.1"
 
 # Configuration
 # Contains the URL with download links - will be scraped automatically for the latest version
