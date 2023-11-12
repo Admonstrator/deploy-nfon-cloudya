@@ -1,6 +1,6 @@
 Describe "GetDownloadURL Function Tests" {
     BeforeAll {
-        . '..\.\Deploy-NFONCloudya.ps1'
+        . '.\Deploy-NFONCloudya.ps1'
     }
 
     It "gets a valid download URL for the latest version" {

@@ -19,4 +19,4 @@ jobs:
     - name: Run Pester Tests
       shell: pwsh
       run: |
-        Invoke-Pester -Path './.tests/Deploy-NFONCloudya.tests.ps1' -Output Detailed
+        Invoke-Pester -Path './.github/.tests/Deploy-NFONCloudya.tests.ps1' -Output Detailed
