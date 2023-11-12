@@ -1,0 +1,25 @@
+name: PowerShell Script Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-script:
+    runs-on: windows-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Set up PowerShell
+      uses: actions/setup-powershell@v1
+
+    - name: Install Pester
+      shell: pwsh
+      run: |
+        Install-Module -Name Pester -Force -SkipPublisherCheck
+
+    - name: Run Pester Tests
+      shell: pwsh
+      run: |
+        Invoke-Pester -Path './.tests/Deploy-NFONCloudya.tests.ps1' -Output Detailed
