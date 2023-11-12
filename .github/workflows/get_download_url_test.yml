@@ -1,4 +1,4 @@
-name: PowerShell Script Test
+name: Test ob Download-URL ermittelbar ist
 
 on:
   push:

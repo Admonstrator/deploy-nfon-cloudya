@@ -1,6 +1,8 @@
 # Deploy-NFONCloudya.ps1
 *Version: 1.3.1*
 
+![Status des URL-Tests](https://github.com/admonstrator/deploy-nfon-cloudya/actions/workflows/get_download_url_test.yml/badge.svg)
+
 Dieses Skript versucht, die neueste Version von Cloudya Desktop by NFON von der offiziellen Website zu installieren. Es bietet darüber hinaus einige erweiterte Konfigurationseinstellungen für die Verteilung innerhalb von Firmennetzwerken, da der native Installer von NFON dies nicht bietet.
 
 ## Hinweis
