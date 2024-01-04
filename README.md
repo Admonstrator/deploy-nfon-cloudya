@@ -1,4 +1,6 @@
 # Deploy-NFONCloudya.ps1
+_Dieses Repository wird nicht mehr aktiv gepflegt, da ich keine NFON-Telefonanlage mehr betreue._
+
 *Version: 1.3.1*
 
 ![Status des URL-Tests](https://github.com/admonstrator/deploy-nfon-cloudya/actions/workflows/get_download_url_test.yml/badge.svg)
